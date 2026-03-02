@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Project } from '@prisma/client';
+import { Project, ProjectCategory } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
@@ -17,6 +17,13 @@ export class ProjectsService {
   async findOne(id: bigint): Promise<Project | null> {
     return this.prisma.project.findUnique({
       where: { id },
+    });
+  }
+
+  async findByCategory(category: ProjectCategory): Promise<Project[]> {
+    return this.prisma.project.findMany({
+      where: { category },
+      orderBy: { createdAt: 'desc' },
     });
   }
 

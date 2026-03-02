@@ -7,12 +7,13 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  ParseEnumPipe,
   Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Project } from '@prisma/client';
+import { Project, ProjectCategory } from '@prisma/client';
 import { AdminGuard } from '../../auth/guards/admin.guard';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
@@ -53,6 +54,22 @@ export class ProjectsController {
     }
 
     return project;
+  }
+
+  @Get('category/:category')
+  @ApiOperation({ summary: 'Get projects by category' })
+  @ApiParam({ name: 'category', example: 'BRANDING_IDENTIDADE' })
+  @ApiResponse({
+    status: 200,
+    description: 'Projects found by category',
+    type: ProjectResponseDto,
+    isArray: true,
+  })
+  async findByCategory(
+    @Param('category', new ParseEnumPipe(ProjectCategory))
+    category: ProjectCategory,
+  ): Promise<Project[]> {
+    return this.projectsService.findByCategory(category);
   }
 
   @UseGuards(AdminGuard)
