@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Project, ProjectCategory } from '@prisma/client';
+import { Project } from '@prisma/client';
+import { ProjectCategory } from '../../enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';

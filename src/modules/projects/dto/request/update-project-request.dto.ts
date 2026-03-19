@@ -1,5 +1,5 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { ProjectCategory } from '@prisma/client';
+import { ProjectCategory } from '../../../../enums';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
 import { CreateProjectRequestDto } from './create-project-request.dto';

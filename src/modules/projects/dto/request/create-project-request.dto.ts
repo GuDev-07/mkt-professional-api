@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ProjectCategory } from '@prisma/client';
+import { ProjectCategory } from '../../../../enums';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsString, IsUrl } from 'class-validator';
 
