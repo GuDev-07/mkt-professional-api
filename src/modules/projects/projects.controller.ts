@@ -13,8 +13,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Project, ProjectCategory } from '@prisma/client';
+import { Project } from '@prisma/client';
 import { AdminGuard } from '../../auth/guards/admin.guard';
+import { ProjectCategory } from '../../enums';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
 import { ProjectResponseDto } from './dto/response/project-response.dto';
@@ -72,8 +73,8 @@ export class ProjectsController {
     return this.projectsService.findByCategory(category);
   }
 
-  @UseGuards(AdminGuard)
   @Post()
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Create a project' })
   @ApiResponse({
     status: 201,
@@ -84,8 +85,8 @@ export class ProjectsController {
     return this.projectsService.create(body);
   }
 
-  @UseGuards(AdminGuard)
   @Patch(':id')
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Update a project' })
   @ApiResponse({
     status: 200,
@@ -99,8 +100,8 @@ export class ProjectsController {
     return this.projectsService.update(BigInt(id), body);
   }
 
-  @UseGuards(AdminGuard)
   @Delete(':id')
+  @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Delete a project' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
