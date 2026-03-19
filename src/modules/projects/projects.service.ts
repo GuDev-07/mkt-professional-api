@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Project } from '@prisma/client';
 import { ProjectCategory } from '../../enums';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -35,13 +35,23 @@ export class ProjectsService {
   async update(id: bigint, data: UpdateProjectRequestDto): Promise<Project> {
     return this.prisma.project.update({
       where: { id },
-      data,
+      data: {
+        title: data.title,
+        category: data.category,
+        description: data.description,
+        client: data.client,
+        imageUrl: data.imageUrl,
+      },
     });
   }
 
-  async remove(id: bigint): Promise<Project> {
-    return this.prisma.project.delete({
-      where: { id },
-    });
+  async remove(id: bigint): Promise<void> {
+    const project = await this.prisma.project.findUnique({ where: { id } });
+
+    if (!project) {
+      throw new NotFoundException(`Project with id ${id} not found`);
+    }
+
+    await this.prisma.project.delete({ where: { id } });
   }
 }

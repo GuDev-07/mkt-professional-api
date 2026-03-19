@@ -103,8 +103,10 @@ export class ProjectsController {
   @Delete(':id')
   @UseGuards(AdminGuard)
   @ApiOperation({ summary: 'Delete a project' })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string): Promise<{ message: string }> {
     await this.projectsService.remove(BigInt(id));
+
+    return { message: `Project with id ${id} deleted` };
   }
 }
