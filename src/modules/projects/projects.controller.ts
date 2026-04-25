@@ -66,6 +66,10 @@ export class ProjectsController {
     type: ProjectResponseDto,
     isArray: true,
   })
+  @ApiResponse({
+    status: 404,
+    description: 'No projects found for this category',
+  })
   async findByCategory(
     @Param('category', new ParseEnumPipe(ProjectCategory))
     category: ProjectCategory,
