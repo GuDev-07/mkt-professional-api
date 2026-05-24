@@ -1,33 +1,46 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { ProjectCategory } from '../../../../enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from 'class-validator';
+import { ProjectCategory } from '../../../../enums';
 
 export class CreateProjectRequestDto {
   @ApiProperty({ example: 'My project title' })
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @ApiProperty({
     example: ProjectCategory.BRANDING_IDENTIDADE,
     enum: ProjectCategory,
   })
   @IsEnum(ProjectCategory)
-  category: ProjectCategory;
+  category!: ProjectCategory;
 
   @ApiProperty({ example: 'A description of the project' })
   @IsString()
   @IsNotEmpty()
-  description: string;
+  description!: string;
 
   @ApiProperty({ example: 'Client name', required: false })
   @IsString()
   client?: string;
 
-  @ApiProperty({ example: 'https://example.com/image.png' })
+  @ApiPropertyOptional({ example: 'https://example.com/image.png' })
+  @IsOptional()
   @IsString()
   @IsUrl()
   @Expose({ name: 'image_url' })
-  imageUrl: string;
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ example: 'projects/1714760000000_uuid.png' })
+  @IsOptional()
+  @IsString()
+  @Expose({ name: 'image_key' })
+  imageKey?: string;
 }

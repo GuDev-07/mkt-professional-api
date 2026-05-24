@@ -8,6 +8,6 @@ import { AdminGuard } from './guards/admin.guard';
   imports: [PrismaModule],
   controllers: [AuthController],
   providers: [SupabaseService, AdminGuard],
-  exports: [SupabaseService, AdminGuard],
+  exports: [SupabaseService, AdminGuard, PrismaModule],
 })
 export class AuthModule {}

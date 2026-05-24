@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../../auth/auth.module';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { ProjectsController } from './projects.controller';
+import { UploadsModule } from '../uploads/uploads.module';
+import { ProjectsController } from './projects.controller.js';
 import { ProjectsService } from './projects.service';
 import { CreateProjectUseCase } from './use-cases/create-project.usecase';
 import { DeleteProjectUseCase } from './use-cases/delete-project.usecase';
@@ -11,7 +12,7 @@ import { ListProjectsUseCase } from './use-cases/list-projects.usecase';
 import { UpdateProjectUseCase } from './use-cases/update-project.usecase';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, UploadsModule],
   controllers: [ProjectsController],
   providers: [
     ProjectsService,

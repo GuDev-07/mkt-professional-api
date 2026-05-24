@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Project } from '@prisma/client';
+import { buildProxyUrl, isExternalUrl } from '../../common/utils/media-url';
 import { ProjectCategory } from '../../enums';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
@@ -22,26 +23,43 @@ export class ProjectsService {
   ) {}
 
   async findAll(): Promise<Project[]> {
-    return this.listProjects.execute();
+    const projects = await this.listProjects.execute();
+    return projects.map((project) => this.mapProject(project));
   }
 
   async findOne(id: bigint): Promise<Project | null> {
-    return this.getProject.execute(id);
+    const project = await this.getProject.execute(id);
+    return project ? this.mapProject(project) : null;
   }
 
   async findByCategory(category: ProjectCategory): Promise<Project[]> {
-    return this.findByCategoryUseCase.execute(category);
+    const projects = await this.findByCategoryUseCase.execute(category);
+    return projects.map((project) => this.mapProject(project));
   }
 
   async create(data: CreateProjectRequestDto): Promise<Project> {
-    return this.createProject.execute(data);
+    const project = await this.createProject.execute(data);
+    return this.mapProject(project);
   }
 
   async update(id: bigint, data: UpdateProjectRequestDto): Promise<Project> {
-    return this.updateProject.execute(id, data);
+    const project = await this.updateProject.execute(id, data);
+    return this.mapProject(project);
   }
 
   async remove(id: bigint): Promise<void> {
     return this.deleteProject.execute(id);
+  }
+
+  private mapProject(project: Project): Project {
+    const value = project.imageUrl;
+    if (!value) {
+      return project;
+    }
+
+    return {
+      ...project,
+      imageUrl: isExternalUrl(value) ? value : buildProxyUrl(value),
+    };
   }
 }

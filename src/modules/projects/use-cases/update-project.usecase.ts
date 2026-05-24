@@ -9,15 +9,27 @@ export class UpdateProjectUseCase {
 
   async execute(id: bigint, data: UpdateProjectRequestDto): Promise<Project> {
     try {
+      const imageValue = data.imageKey ?? data.imageUrl;
+      const updateData: {
+        title?: string;
+        category?: Project['category'];
+        description?: string;
+        client?: string | null;
+        imageUrl?: string;
+      } = {
+        title: data.title,
+        category: data.category,
+        description: data.description,
+        client: data.client,
+      };
+
+      if (imageValue) {
+        updateData.imageUrl = imageValue;
+      }
+
       return await this.prisma.project.update({
         where: { id },
-        data: {
-          title: data.title,
-          category: data.category,
-          description: data.description,
-          client: data.client,
-          imageUrl: data.imageUrl,
-        },
+        data: updateData,
       });
     } catch (err) {
       if (
