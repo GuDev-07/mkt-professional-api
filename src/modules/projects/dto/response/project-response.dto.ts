@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EXAMPLE_UUID } from '../../../../common/constants/uuid.example';
 
 export class ProjectResponseDto {
-  @ApiProperty({ example: '1' })
+  @ApiProperty({ example: EXAMPLE_UUID })
   id: string;
 
   @ApiProperty({ example: 'My project title' })

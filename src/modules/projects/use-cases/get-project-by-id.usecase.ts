@@ -6,7 +6,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 export class GetProjectUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: bigint): Promise<Project | null> {
+  async execute(id: string): Promise<Project | null> {
     return await this.prisma.project.findUnique({ where: { id } });
   }
 }

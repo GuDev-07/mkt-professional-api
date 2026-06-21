@@ -7,7 +7,7 @@ import { UpdateProjectRequestDto } from '../dto/request/update-project-request.d
 export class UpdateProjectUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: bigint, data: UpdateProjectRequestDto): Promise<Project> {
+  async execute(id: string, data: UpdateProjectRequestDto): Promise<Project> {
     try {
       const imageValue = data.imageKey ?? data.imageUrl;
       const updateData: {

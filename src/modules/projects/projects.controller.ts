@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   ParseEnumPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   UploadedFile,
@@ -28,8 +29,9 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Project } from '@prisma/client';
 import { memoryStorage } from 'multer';
 import { AdminGuard } from '../../auth/guards/admin.guard';
+import { EXAMPLE_UUID } from '../../common/constants/uuid.example';
 import { ProjectCategory } from '../../enums';
-import { UploadImageFile, UploadsService } from '../uploads/uploads.service';
+import { isUploadImageFile } from '../uploads/upload-image.utils';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
 import { ProjectResponseDto } from './dto/response/project-response.dto';
@@ -38,10 +40,7 @@ import { ProjectsService } from './projects.service';
 @ApiTags('projects')
 @Controller('projects')
 export class ProjectsController {
-  constructor(
-    private readonly projectsService: ProjectsService,
-    private readonly uploadsService: UploadsService,
-  ) {}
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all projects' })
@@ -57,20 +56,17 @@ export class ProjectsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get project by id' })
-  @ApiParam({ name: 'id', example: '1' })
+  @ApiParam({ name: 'id', example: EXAMPLE_UUID })
   @ApiResponse({
     status: 200,
     description: 'Project found',
     type: ProjectResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Project not found' })
-  async findOne(@Param('id') id: string): Promise<Project> {
-    const project = await this.projectsService.findOne(BigInt(id));
-
-    if (!project) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Project> {
+    const project = await this.projectsService.findOne(id);
+    if (!project)
       throw new NotFoundException(`Project with id ${id} not found`);
-    }
-
     return project;
   }
 
@@ -82,10 +78,6 @@ export class ProjectsController {
     description: 'Projects found by category',
     type: ProjectResponseDto,
     isArray: true,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'No projects found for this category',
   })
   async findByCategory(
     @Param('category', new ParseEnumPipe(ProjectCategory))
@@ -116,12 +108,10 @@ export class ProjectsController {
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['title', 'category', 'description', 'image'],
       properties: {
         title: { type: 'string', example: 'Campanha5' },
-        category: {
-          type: 'string',
-          example: 'BRANDING_IDENTIDADE',
-        },
+        category: { type: 'string', example: 'BRANDING_IDENTIDADE' },
         description: {
           type: 'string',
           example: 'Promoção especial para teste',
@@ -129,7 +119,6 @@ export class ProjectsController {
         client: { type: 'string', example: 'Loja Virtual XYZ' },
         image: { type: 'string', format: 'binary' },
       },
-      required: ['title', 'category', 'description', 'image'],
     },
   })
   @ApiResponse({
@@ -146,26 +135,7 @@ export class ProjectsController {
         'Imagem é obrigatória e deve ser jpg ou png',
       );
     }
-
-    const detectedMimeType = detectImageMimeType(file.buffer);
-    if (!detectedMimeType) {
-      throw new BadRequestException('Arquivo não é uma imagem valida');
-    }
-
-    if (!['image/jpeg', 'image/png'].includes(detectedMimeType)) {
-      throw new BadRequestException('Tipo de arquivo inválido (jpg/png)');
-    }
-
-    if (file.mimetype !== detectedMimeType) {
-      throw new BadRequestException('Tipo de arquivo inválido (jpg/png)');
-    }
-
-    const result = await this.uploadsService.uploadImage(file);
-
-    body.imageKey = result.key;
-    body.imageUrl = result.url;
-
-    return this.projectsService.create(body);
+    return this.projectsService.create(file, body);
   }
 
   @Patch(':id')
@@ -183,10 +153,10 @@ export class ProjectsController {
     type: ProjectResponseDto,
   })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateProjectRequestDto,
   ): Promise<Project> {
-    return this.projectsService.update(BigInt(id), body);
+    return this.projectsService.update(id, body);
   }
 
   @Delete(':id')
@@ -199,51 +169,10 @@ export class ProjectsController {
   })
   @ApiOperation({ summary: 'Delete a project' })
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string): Promise<{ message: string }> {
-    await this.projectsService.remove(BigInt(id));
-
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<{ message: string }> {
+    await this.projectsService.remove(id);
     return { message: `Project with id ${id} deleted` };
   }
-}
-
-function isUploadImageFile(file: unknown): file is UploadImageFile {
-  if (!file || typeof file !== 'object') {
-    return false;
-  }
-
-  const candidate = file as UploadImageFile;
-  return (
-    typeof candidate.originalname === 'string' &&
-    typeof candidate.mimetype === 'string' &&
-    Buffer.isBuffer(candidate.buffer)
-  );
-}
-
-function detectImageMimeType(buffer: Buffer): string | null {
-  if (buffer.length < 4) {
-    return null;
-  }
-
-  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-  if (isJpeg) {
-    return 'image/jpeg';
-  }
-
-  const isPng =
-    buffer[0] === 0x89 &&
-    buffer[1] === 0x50 &&
-    buffer[2] === 0x4e &&
-    buffer[3] === 0x47 &&
-    buffer[4] === 0x0d &&
-    buffer[5] === 0x0a &&
-    buffer[6] === 0x1a &&
-    buffer[7] === 0x0a;
-
-  if (isPng) {
-    return 'image/png';
-  }
-
-  return null;
 }
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {

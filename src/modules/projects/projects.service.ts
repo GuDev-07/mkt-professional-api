@@ -6,6 +6,7 @@ import {
   isExternalUrl,
 } from '../../common/utils/media-url';
 import { S3StorageService } from '../uploads/s3-storage.service';
+import { UploadImageFile } from '../uploads/upload-image.utils';
 import { ProjectCategory } from '../../enums';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
@@ -33,7 +34,7 @@ export class ProjectsService {
     return Promise.all(projects.map((p) => this.mapProject(p)));
   }
 
-  async findOne(id: bigint): Promise<Project | null> {
+  async findOne(id: string): Promise<Project | null> {
     const project = await this.getProject.execute(id);
     return project ? this.mapProject(project) : null;
   }
@@ -43,17 +44,20 @@ export class ProjectsService {
     return Promise.all(projects.map((p) => this.mapProject(p)));
   }
 
-  async create(data: CreateProjectRequestDto): Promise<Project> {
-    const project = await this.createProject.execute(data);
+  async create(
+    file: UploadImageFile,
+    data: CreateProjectRequestDto,
+  ): Promise<Project> {
+    const project = await this.createProject.execute(file, data);
     return this.mapProject(project);
   }
 
-  async update(id: bigint, data: UpdateProjectRequestDto): Promise<Project> {
+  async update(id: string, data: UpdateProjectRequestDto): Promise<Project> {
     const project = await this.updateProject.execute(id, data);
     return this.mapProject(project);
   }
 
-  async remove(id: bigint): Promise<void> {
+  async remove(id: string): Promise<void> {
     return this.deleteProject.execute(id);
   }
 
