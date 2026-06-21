@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Feedback {
-  id        BigInt   @id @default(autoincrement())
+  id        String   @id @default(uuid()) @db.Uuid
   name      String   @unique
   company   String?
   comment   String?
+  jobTitle  String?  @map("job_title")
   avatar    String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -20,41 +21,41 @@ model Feedback {
 }
 
 model Project {
-  id          BigInt   @id @default(autoincrement())
+  id          String          @id @default(uuid()) @db.Uuid
   title       String
   category    ProjectCategory
   description String
   client      String?
-  imageUrl    String   @map("image_url")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  imageUrl    String          @map("image_url")
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("projects")
   @@schema("public")
 }
 
 model TimelineExperience {
-  id         BigInt           @id @default(autoincrement())
-  startYear  Int              @map("start_year")
-  endYear    Int?             @map("end_year")
-  isCurrent  Boolean          @default(false) @map("is_current")
-  role       String
-  company    String
+  id          String   @id @default(uuid()) @db.Uuid
+  startYear   Int      @map("start_year")
+  endYear     Int?     @map("end_year")
+  isCurrent   Boolean  @default(false) @map("is_current")
+  role        String
+  company     String
   description String
-  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  gallery    TimelineGallery[]
+  gallery TimelineGallery[]
 
   @@map("timeline_experiences")
   @@schema("public")
 }
 
 model TimelineGallery {
-  id           BigInt            @id @default(autoincrement())
-  experienceId BigInt            @map("experience_id")
-  imageUrl     String            @map("image_url")
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  id           String             @id @default(uuid()) @db.Uuid
+  experienceId String             @map("experience_id") @db.Uuid
+  imageUrl     String             @map("image_url")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  experience   TimelineExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  experience TimelineExperience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 
   @@map("timeline_gallery")
   @@schema("public")
