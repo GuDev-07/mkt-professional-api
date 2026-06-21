@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Project } from '@prisma/client';
-import { buildProxyUrl, isExternalUrl } from '../../common/utils/media-url';
+import {
+  buildProxyUrl,
+  isDirectPresignEnabled,
+  isExternalUrl,
+} from '../../common/utils/media-url';
+import { S3StorageService } from '../uploads/s3-storage.service';
 import { ProjectCategory } from '../../enums';
 import { CreateProjectRequestDto } from './dto/request/create-project-request.dto';
 import { UpdateProjectRequestDto } from './dto/request/update-project-request.dto';
@@ -20,11 +25,12 @@ export class ProjectsService {
     private readonly findByCategoryUseCase: FindByCategoryUseCase,
     private readonly updateProject: UpdateProjectUseCase,
     private readonly deleteProject: DeleteProjectUseCase,
+    private readonly storage: S3StorageService,
   ) {}
 
   async findAll(): Promise<Project[]> {
     const projects = await this.listProjects.execute();
-    return projects.map((project) => this.mapProject(project));
+    return Promise.all(projects.map((p) => this.mapProject(p)));
   }
 
   async findOne(id: bigint): Promise<Project | null> {
@@ -34,7 +40,7 @@ export class ProjectsService {
 
   async findByCategory(category: ProjectCategory): Promise<Project[]> {
     const projects = await this.findByCategoryUseCase.execute(category);
-    return projects.map((project) => this.mapProject(project));
+    return Promise.all(projects.map((p) => this.mapProject(p)));
   }
 
   async create(data: CreateProjectRequestDto): Promise<Project> {
@@ -51,15 +57,21 @@ export class ProjectsService {
     return this.deleteProject.execute(id);
   }
 
-  private mapProject(project: Project): Project {
+  private async mapProject(project: Project): Promise<Project> {
     const value = project.imageUrl;
     if (!value) {
       return project;
     }
 
-    return {
-      ...project,
-      imageUrl: isExternalUrl(value) ? value : buildProxyUrl(value),
-    };
+    if (isExternalUrl(value)) {
+      return project;
+    }
+
+    if (isDirectPresignEnabled()) {
+      const imageUrl = await this.storage.getPresignedDownloadUrl(value);
+      return { ...project, imageUrl };
+    }
+
+    return { ...project, imageUrl: buildProxyUrl(value) };
   }
 }

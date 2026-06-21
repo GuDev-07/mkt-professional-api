@@ -12,7 +12,7 @@ export class UploadsService {
 
   buildKey(originalName: string, mimeType: string): string {
     const prefix = (process.env.SUPABASE_UPLOAD_PREFIX ?? 'projects/').replace(
-      /^\/+/, // strip leading slashes
+      /^\/+/,
       '',
     );
     const ext = extname(originalName) || this.fallbackExtension(mimeType);
@@ -27,6 +27,24 @@ export class UploadsService {
     await this.storage.uploadObject(key, file.buffer, file.mimetype);
 
     return { key, url: buildProxyUrl(key) };
+  }
+
+  async requestPresignedUpload(
+    originalName: string,
+    contentType: string,
+  ): Promise<{ key: string; uploadUrl: string; expiresIn: number }> {
+    const key = this.buildKey(originalName, contentType);
+    const expiresIn = parsePositiveInt(
+      process.env.PRESIGNED_UPLOAD_TTL_SECONDS,
+      300,
+    );
+    const uploadUrl = await this.storage.getPresignedUploadUrl(
+      key,
+      contentType,
+      expiresIn,
+    );
+
+    return { key, uploadUrl, expiresIn };
   }
 
   private fallbackExtension(mimeType: string): string {
