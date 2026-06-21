@@ -23,10 +23,12 @@ export class MediaController {
   constructor(private readonly storage: S3StorageService) {}
 
   @Get('*key')
-  @Throttle(
-    parsePositiveInt(process.env.MEDIA_RATE_LIMIT, 120),
-    parsePositiveInt(process.env.MEDIA_RATE_TTL, 60),
-  )
+  @Throttle({
+    default: {
+      limit: parsePositiveInt(process.env.MEDIA_RATE_LIMIT, 120),
+      ttl: parsePositiveInt(process.env.MEDIA_RATE_TTL, 60),
+    },
+  })
   async stream(
     @Param('key') keyParam: string,
     @Query('token') token: string | undefined,

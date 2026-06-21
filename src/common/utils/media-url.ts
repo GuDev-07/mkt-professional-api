@@ -3,6 +3,15 @@ import { createHmac, timingSafeEqual } from 'crypto';
 export const isExternalUrl = (value: string): boolean =>
   /^https?:\/\//i.test(value);
 
+/**
+ * When MEDIA_DIRECT_PRESIGN=true the API hands back S3 presigned download
+ * URLs instead of routing traffic through the /media proxy. The S3StorageService
+ * generates these URLs at response time; this flag lets callers know whether to
+ * use the proxy path or the direct-S3 path.
+ */
+export const isDirectPresignEnabled = (): boolean =>
+  process.env.MEDIA_DIRECT_PRESIGN === 'true';
+
 const getNormalizedBasePath = (): string => {
   const basePath = process.env.BASE_PATH ?? '';
   return basePath ? `/${basePath.replace(/^\/+|\/+$/g, '')}` : '';

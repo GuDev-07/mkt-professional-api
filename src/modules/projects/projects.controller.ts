@@ -96,10 +96,12 @@ export class ProjectsController {
 
   @Post()
   @UseGuards(AdminGuard, ThrottlerGuard)
-  @Throttle(
-    parsePositiveInt(process.env.UPLOAD_RATE_LIMIT, 30),
-    parsePositiveInt(process.env.UPLOAD_RATE_TTL, 60),
-  )
+  @Throttle({
+    default: {
+      limit: parsePositiveInt(process.env.UPLOAD_RATE_LIMIT, 30),
+      ttl: parsePositiveInt(process.env.UPLOAD_RATE_TTL, 60),
+    },
+  })
   @UseInterceptors(
     FileInterceptor('image', {
       storage: memoryStorage(),
@@ -167,7 +169,13 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard, ThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: parsePositiveInt(process.env.ADMIN_RATE_LIMIT, 100),
+      ttl: parsePositiveInt(process.env.ADMIN_RATE_TTL, 60),
+    },
+  })
   @ApiOperation({ summary: 'Update a project' })
   @ApiResponse({
     status: 200,
@@ -182,7 +190,13 @@ export class ProjectsController {
   }
 
   @Delete(':id')
-  @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard, ThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: parsePositiveInt(process.env.ADMIN_RATE_LIMIT, 100),
+      ttl: parsePositiveInt(process.env.ADMIN_RATE_TTL, 60),
+    },
+  })
   @ApiOperation({ summary: 'Delete a project' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string): Promise<{ message: string }> {
