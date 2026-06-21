@@ -1,18 +1,22 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EXAMPLE_UUID } from '../../../../common/constants/uuid.example';
 
 export class FeedbackResponseDto {
-  @ApiProperty({ example: '1' })
-  id: string;
+  @ApiProperty({ example: EXAMPLE_UUID })
+  id!: string;
 
-  @ApiProperty({ example: 'Name of person' })
-  name: string;
+  @ApiProperty({ example: 'Juliana Paes' })
+  name!: string;
 
-  @ApiProperty({ example: 'Esc Empreendimentos' })
-  company: string;
+  @ApiPropertyOptional({ example: 'Bloom' })
+  company?: string;
 
-  @ApiProperty({ example: 'Great service!' })
-  comment: string;
+  @ApiPropertyOptional({ example: 'Extremamente profissional e criativa.' })
+  comment?: string;
 
-  @ApiProperty({ example: 'https://example.com/image.png' })
-  avatarUrl: string;
+  @ApiPropertyOptional({ example: 'Fundadora da Bloom' })
+  jobTitle?: string;
+
+  @ApiPropertyOptional({ example: '/media/feedbacks%2F123_uuid.jpg' })
+  avatar?: string;
 }

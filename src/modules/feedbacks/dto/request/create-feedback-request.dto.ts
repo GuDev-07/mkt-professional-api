@@ -1,26 +1,39 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import { pickStringFromTransform } from './feedback-field.utils';
 
 export class CreateFeedbackRequestDto {
-  @ApiProperty({ example: 'Michelle' })
+  @ApiProperty({ example: 'Juliana Paes' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
-  @ApiProperty({ example: 'Esc Empreendimentos' })
+  @ApiPropertyOptional({ example: 'Bloom' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  company: string;
+  company?: string;
 
-  @ApiProperty({ example: 'Great service!' })
+  @ApiPropertyOptional({ example: 'Extremamente profissional e criativa.' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  comment: string;
+  comment?: string;
 
-  @ApiProperty({ example: 'https://example.com/image.png' })
+  @ApiPropertyOptional({
+    example: 'Fundadora da Bloom',
+    description: 'Accepts jobTitle or job_title',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(pickStringFromTransform('jobTitle', 'job_title'))
+  jobTitle?: string;
+
+  avatarKey?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @IsOptional()
   @IsString()
   @IsUrl()
-  @Expose({ name: 'avatar_url' })
-  avatar: string;
+  @Transform(pickStringFromTransform('avatarUrl', 'avatar_url'))
+  avatarUrl?: string;
 }

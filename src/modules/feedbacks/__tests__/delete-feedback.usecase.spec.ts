@@ -1,7 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Feedback } from '@prisma/client';
-import { EXAMPLE_UUID, OTHER_UUID } from '../../../common/constants/uuid.example';
+import {
+  EXAMPLE_UUID,
+  OTHER_UUID,
+} from '../../../common/constants/uuid.example';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { S3StorageService } from '../../uploads/s3-storage.service';
 import { DeleteFeedbackUseCase } from '../use-cases/delete-feedback.usecase';
@@ -36,7 +38,9 @@ describe('DeleteFeedbackUseCase', () => {
 
   it('throws NotFoundException when feedback does not exist', async () => {
     prismaMock.feedback.findUnique.mockResolvedValue(null);
-    await expect(useCase.execute(OTHER_UUID)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(OTHER_UUID)).rejects.toThrow(
+      NotFoundException,
+    );
     expect(prismaMock.feedback.delete).not.toHaveBeenCalled();
     expect(s3Mock.deleteObject).not.toHaveBeenCalled();
   });
