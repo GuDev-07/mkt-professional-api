@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { ProjectCategory } from '@prisma/client';
 import { AdminGuard } from '../../../auth/guards/admin.guard';
+import { EXAMPLE_UUID } from '../../../common/constants/uuid.example';
 import { ProjectsController } from '../projects.controller';
 import { ProjectsService } from '../projects.service';
+
+const alwaysAllow = { canActivate: () => true };
 
 describe('Update Project (unit)', () => {
   let controller: ProjectsController;
@@ -19,7 +23,9 @@ describe('Update Project (unit)', () => {
       providers: [{ provide: ProjectsService, useValue: projectsServiceMock }],
     })
       .overrideGuard(AdminGuard)
-      .useValue({ canActivate: jest.fn().mockResolvedValue(true) })
+      .useValue(alwaysAllow)
+      .overrideGuard(ThrottlerGuard)
+      .useValue(alwaysAllow)
       .compile();
 
     controller = module.get<ProjectsController>(ProjectsController);
@@ -30,7 +36,7 @@ describe('Update Project (unit)', () => {
   it('calls service.update and returns updated project', async () => {
     const dto = { title: 'Updated Title' };
     const updated = {
-      id: BigInt(1),
+      id: EXAMPLE_UUID,
       title: 'Updated Title',
       category: 'BRANDING_IDENTIDADE' as ProjectCategory,
       description: 'Desc',
@@ -40,9 +46,9 @@ describe('Update Project (unit)', () => {
     };
     projectsServiceMock.update = jest.fn().mockResolvedValue(updated);
 
-    const result = await controller.update('1', dto);
+    const result = await controller.update(EXAMPLE_UUID, dto);
 
-    expect(projectsServiceMock.update).toHaveBeenCalledWith(BigInt(1), dto);
+    expect(projectsServiceMock.update).toHaveBeenCalledWith(EXAMPLE_UUID, dto);
     expect(result).toEqual(updated);
   });
 });

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 
 import { NotFoundException } from '@nestjs/common';
+import { EXAMPLE_UUID } from '../../../common/constants/uuid.example';
 import { ProjectCategory } from '../../../enums';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { FindByCategoryUseCase } from '../use-cases/find-by-category.usecase';
@@ -19,7 +20,7 @@ describe('FindByCategoryUseCase (unit)', () => {
   it('returns projects when category has data', async () => {
     const projects = [
       {
-        id: BigInt(1),
+        id: EXAMPLE_UUID,
         title: 'Projeto 1',
         category: ProjectCategory.BRANDING_IDENTIDADE,
         description: 'Descricao',
