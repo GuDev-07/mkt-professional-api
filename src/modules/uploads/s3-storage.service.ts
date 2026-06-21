@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -76,6 +77,14 @@ export class S3StorageService {
       ContentType: contentType,
     });
 
+    await this.client.send(command);
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    const command = new DeleteObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
     await this.client.send(command);
   }
 

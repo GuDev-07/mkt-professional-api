@@ -1,29 +1,75 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { extname } from 'path';
 import { buildProxyUrl } from '../../common/utils/media-url';
 import { S3StorageService } from './s3-storage.service';
+import {
+  detectImageMimeType,
+  UploadImageFile,
+} from './upload-image.utils';
+
+export type { UploadImageFile } from './upload-image.utils';
+export { isUploadImageFile } from './upload-image.utils';
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 
 @Injectable()
 export class UploadsService {
   constructor(private readonly storage: S3StorageService) {}
 
-  buildKey(originalName: string, mimeType: string): string {
-    const prefix = (process.env.SUPABASE_UPLOAD_PREFIX ?? 'projects/').replace(
-      /^\/+/,
-      '',
-    );
+  buildKey(originalName: string, mimeType: string, prefix?: string): string {
+    const resolvedPrefix = (
+      prefix ??
+      process.env.SUPABASE_UPLOAD_PREFIX ??
+      'projects/'
+    ).replace(/^\/+/, '');
     const ext = extname(originalName) || this.fallbackExtension(mimeType);
-    return `${prefix}${Date.now()}_${randomUUID()}${ext}`;
+    return `${resolvedPrefix}${Date.now()}_${randomUUID()}${ext}`;
+  }
+
+  /**
+   * Validates magic bytes and MIME type, uploads to S3 and returns the stored key.
+   * This is the primary method use-cases should call for image uploads.
+   */
+  async processImageUpload(
+    file: UploadImageFile,
+    prefix?: string,
+  ): Promise<{ key: string; url: string }> {
+    this.validateImageFile(file);
+    return this.uploadImage(file, prefix);
+  }
+
+  /**
+   * Validates the file content against its declared MIME type using magic bytes.
+   * Throws BadRequestException when the file is not a valid jpg/png.
+   */
+  validateImageFile(file: UploadImageFile): void {
+    const detected = detectImageMimeType(file.buffer);
+    if (!detected) {
+      throw new BadRequestException('Arquivo não é uma imagem válida');
+    }
+    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(detected)) {
+      throw new BadRequestException('Tipo de arquivo inválido (jpg/png)');
+    }
+    if (file.mimetype !== detected) {
+      throw new BadRequestException(
+        'Tipo de arquivo inválido: MIME declarado não corresponde ao conteúdo',
+      );
+    }
   }
 
   async uploadImage(
     file: UploadImageFile,
+    prefix?: string,
   ): Promise<{ key: string; url: string }> {
     await this.scanIfConfigured(file);
-    const key = this.buildKey(file.originalname, file.mimetype);
+    const key = this.buildKey(file.originalname, file.mimetype, prefix);
     await this.storage.uploadObject(key, file.buffer, file.mimetype);
 
     return { key, url: buildProxyUrl(key) };
@@ -73,12 +119,6 @@ export class UploadsService {
       throw new ServiceUnavailableException(message);
     }
   }
-}
-
-export interface UploadImageFile {
-  buffer: Buffer;
-  mimetype: string;
-  originalname: string;
 }
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
